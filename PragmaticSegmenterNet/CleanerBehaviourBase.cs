@@ -1,17 +1,16 @@
-﻿namespace PragmaticSegmenterNet
+using System.Text.RegularExpressions;
+
+namespace PragmaticSegmenterNet;
+
+internal class CleanerBehaviourBase : ICleanerBehaviour
 {
-    using System.Text.RegularExpressions;
+    private static readonly Regex NoSpaceBetweenSentenceRegexStore = new Regex(@"(?<=[a-z])\.(?=[A-Z][^\.]+)");
 
-    internal class CleanerBehaviourBase : ICleanerBehaviour
+    public Regex NoSpaceBetweenSentencesRegex => NoSpaceBetweenSentenceRegexStore;
+    public Rule NoSpaceBetweenSentencesRule { get; } = new Rule(NoSpaceBetweenSentenceRegexStore, ". ");
+
+    public virtual string OnClean(string text)
     {
-        private static readonly Regex NoSpaceBetweenSentenceRegexStore = new Regex(@"(?<=[a-z])\.(?=[A-Z][^\.]+)");
-
-        public Regex NoSpaceBetweenSentencesRegex => NoSpaceBetweenSentenceRegexStore;
-        public Rule NoSpaceBetweenSentencesRule { get; } = new Rule(NoSpaceBetweenSentenceRegexStore, ". ");
-
-        public virtual string OnClean(string text)
-        {
-            return text;
-        }
+        return text;
     }
 }

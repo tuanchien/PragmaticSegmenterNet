@@ -1,19 +1,18 @@
-﻿namespace PragmaticSegmenterNet
+using System.Text.RegularExpressions;
+
+namespace PragmaticSegmenterNet;
+
+internal static class ExclamationWords
 {
-    using System.Text.RegularExpressions;
+    private static readonly Regex ExclamationRegex =
+        new Regex("!Xũ|!Kung|ǃʼOǃKung|!Xuun|!Kung-Ekoka|ǃHu|ǃKhung|ǃKu|ǃung|ǃXo|ǃXû|ǃXung|ǃXũ|!Xun|Yahoo!|Y!J|Yum!");
 
-    internal static class ExclamationWords
+    public static string Apply(string input)
     {
-        private static readonly Regex ExclamationRegex =
-            new Regex("!Xũ|!Kung|ǃʼOǃKung|!Xuun|!Kung-Ekoka|ǃHu|ǃKhung|ǃKu|ǃung|ǃXo|ǃXû|ǃXung|ǃXũ|!Xun|Yahoo!|Y!J|Yum!");
+        var matches = ExclamationRegex.Matches(input);
 
-        public static string Apply(string input)
-        {
-            var matches = ExclamationRegex.Matches(input);
+        var result = PunctuationReplacer.Replace(input, matches);
 
-            var result = PunctuationReplacer.Replace(input, matches);
-
-            return result;
-        }
+        return result;
     }
 }

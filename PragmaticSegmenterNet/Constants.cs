@@ -1,7 +1,6 @@
-﻿namespace PragmaticSegmenterNet
+namespace PragmaticSegmenterNet;
+
+internal static class Constants
 {
-    internal static class Constants
-    {
-        public const string ReplacedSymbol = "∯";
-    }
+    public const string ReplacedSymbol = "∯";
 }

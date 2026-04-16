@@ -1,7 +1,6 @@
-﻿namespace PragmaticSegmenterNet
+namespace PragmaticSegmenterNet;
+
+internal interface INumberRules
 {
-    internal interface INumberRules
-    {
-        string Apply(string input);
-    }
+    string Apply(string input);
 }

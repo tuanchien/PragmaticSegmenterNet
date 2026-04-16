@@ -1,15 +1,12 @@
-﻿namespace PragmaticSegmenterNet.Languages.Common
-{
-    using System.Collections.Generic;
+namespace PragmaticSegmenterNet.Languages.Common;
 
-    internal static class DoublePunctuationRules
-    {
-        public static readonly IReadOnlyList<Rule> All = new[]
-        {
-            new Rule(@"\?!", "☉"),
-            new Rule(@"!\?", "☈"),
-            new Rule(@"\?\?", "☇"),
-            new Rule(@"!!", "☄")
-        };
-    }
+internal static class DoublePunctuationRules
+{
+    public static readonly IReadOnlyList<Rule> All =
+    [
+        new Rule(@"\?!", "☉"),
+        new Rule(@"!\?", "☈"),
+        new Rule(@"\?\?", "☇"),
+        new Rule(@"!!", "☄")
+    ];
 }

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"C:\\\\Users\\\\Tuan\\\\source\\\\repos\\\\tuanchien-github\\\\PragmaticSegmenterNet\\\\PragmaticSegmenterNet\" -type f -name \"*.cs\" -exec wc -l {} +)",
+      "Bash(xargs grep:*)",
+      "Bash(dotnet:*)",
+      "Bash(grep -cE \"error [A-Z]+[0-9]+:\" C:\\\\\\\\Users\\\\\\\\Tuan\\\\\\\\.claude\\\\\\\\projects\\\\\\\\C--Users-Tuan-source-repos-tuanchien-github-PragmaticSegmenterNet\\\\\\\\ae92ae8e-4abe-43a3-92f4-2d1b50addde7\\\\\\\\tool-results\\\\\\\\bddwbnj4q.txt)",
+      "Bash(grep -E \"error [A-Z]+[0-9]+:\" C:\\\\\\\\Users\\\\\\\\Tuan\\\\\\\\.claude\\\\\\\\projects\\\\\\\\C--Users-Tuan-source-repos-tuanchien-github-PragmaticSegmenterNet\\\\\\\\ae92ae8e-4abe-43a3-92f4-2d1b50addde7\\\\\\\\tool-results\\\\\\\\bddwbnj4q.txt)"
+    ]
+  }
+}

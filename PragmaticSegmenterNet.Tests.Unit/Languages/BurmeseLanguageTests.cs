@@ -1,14 +1,13 @@
-﻿namespace PragmaticSegmenterNet.Tests.Unit.Languages
-{
-    using Xunit;
+using Xunit;
 
-    public class BurmeseLanguageTests
+namespace PragmaticSegmenterNet.Tests.Unit.Languages;
+
+public class BurmeseLanguageTests
+{
+    [Fact]
+    public void CorrectlySegmentsText001()
     {
-        [Fact]
-        public void CorrectlySegmentsText001()
-        {
-            var result = Segmenter.Segment("ခင္ဗ်ားနာမည္ဘယ္လိုေခၚလဲ။၇ွင္ေနေကာင္းလား။", Language.Burmese);
-            Assert.Equal(new[] { "ခင္ဗ်ားနာမည္ဘယ္လိုေခၚလဲ။", "၇ွင္ေနေကာင္းလား။" }, result);
-        }
+        var result = Segmenter.Segment("ခင္ဗ်ားနာမည္ဘယ္လိုေခၚလဲ။၇ွင္ေနေကာင္းလား။", Language.Burmese);
+        Assert.Equal(new[] { "ခင္ဗ်ားနာမည္ဘယ္လိုေခၚလဲ။", "၇ွင္ေနေကာင္းလား။" }, result);
     }
 }

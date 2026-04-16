@@ -1,13 +1,12 @@
-﻿namespace PragmaticSegmenterNet
+using System.Text.RegularExpressions;
+
+namespace PragmaticSegmenterNet;
+
+internal interface ICleanerBehaviour
 {
-    using System.Text.RegularExpressions;
+    Regex NoSpaceBetweenSentencesRegex { get; }
 
-    internal interface ICleanerBehaviour
-    {
-        Regex NoSpaceBetweenSentencesRegex { get; }
+    Rule NoSpaceBetweenSentencesRule { get; }
 
-        Rule NoSpaceBetweenSentencesRule { get; }
-
-        string OnClean(string text);
-    }
+    string OnClean(string text);
 }

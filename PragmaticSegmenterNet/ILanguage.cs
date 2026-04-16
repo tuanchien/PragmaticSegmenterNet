@@ -1,76 +1,74 @@
-﻿namespace PragmaticSegmenterNet
+using System.Text.RegularExpressions;
+
+namespace PragmaticSegmenterNet;
+
+internal interface ILanguage
 {
-    using System.Collections.Generic;
-    using System.Text.RegularExpressions;
+    IAbbreviationReplacer AbbreviationReplacer { get; }
 
-    internal interface ILanguage
-    {
-        IAbbreviationReplacer AbbreviationReplacer { get; }
+    IBetweenPunctuationReplacer BetweenPunctuationReplacer { get; }
 
-        IBetweenPunctuationReplacer BetweenPunctuationReplacer { get; }
+    INumberRules NumberRules { get; }
 
-        INumberRules NumberRules { get; }
-        
-        IReadOnlyList<string> Abbreviations { get; }
+    IReadOnlyList<string> Abbreviations { get; }
 
-        IReadOnlyList<string> CleanedAbbreviations { get; }
+    IReadOnlyList<string> CleanedAbbreviations { get; }
 
-        IReadOnlyList<string> PrepositiveAbbreviations { get; }
+    IReadOnlyList<string> PrepositiveAbbreviations { get; }
 
-        IReadOnlyList<string> NumberAbbreviations { get; }
+    IReadOnlyList<string> NumberAbbreviations { get; }
 
-        IReadOnlyList<string> SentenceStarters { get; }
+    IReadOnlyList<string> SentenceStarters { get; }
 
-        IReadOnlyList<string> Punctuations { get; }
+    IReadOnlyList<string> Punctuations { get; }
 
-        Regex MultiPeriodAbbreviationRegex { get; }
+    Regex MultiPeriodAbbreviationRegex { get; }
 
-        Regex ContinuousPunctuationRegex { get; }
+    Regex ContinuousPunctuationRegex { get; }
 
-        Regex ParenthesesBetweenDoubleQuotesRegex { get; }
+    Regex ParenthesesBetweenDoubleQuotesRegex { get; }
 
-        Regex SentenceBoundaryRegex { get; }
+    Regex SentenceBoundaryRegex { get; }
 
-        Regex QuotationAtEndOfSentenceRegex { get; }
+    Regex QuotationAtEndOfSentenceRegex { get; }
 
-        Regex SplitSpaceQuotationAtEndOfSentenceRegex { get; }
+    Regex SplitSpaceQuotationAtEndOfSentenceRegex { get; }
 
-        IReadOnlyList<Rule> AmPmRules { get; }
+    IReadOnlyList<Rule> AmPmRules { get; }
 
-        IReadOnlyList<Rule> SingleLetterAbbreviationRules { get; }
+    IReadOnlyList<Rule> SingleLetterAbbreviationRules { get; }
 
-        IReadOnlyList<Rule> EllipsisRules { get; }
+    IReadOnlyList<Rule> EllipsisRules { get; }
 
-        IReadOnlyList<Rule> DoublePunctuationRules { get; }
+    IReadOnlyList<Rule> DoublePunctuationRules { get; }
 
-        IReadOnlyList<Rule> ExclamationMarkRules { get; }
+    IReadOnlyList<Rule> ExclamationMarkRules { get; }
 
-        IReadOnlyList<Rule> SubSymbolsRules { get; }
+    IReadOnlyList<Rule> SubSymbolsRules { get; }
 
-        IReadOnlyList<Rule> ReinsertEllipsisRules { get; }
+    IReadOnlyList<Rule> ReinsertEllipsisRules { get; }
 
-        Rule WithMultiplePeriodsAndEmailRule { get; }
+    Rule WithMultiplePeriodsAndEmailRule { get; }
 
-        Rule GeoLocationRule { get; }
+    Rule GeoLocationRule { get; }
 
-        Rule FileFormatRule { get; }
+    Rule FileFormatRule { get; }
 
-        Rule SingleNewLineRule { get; }
+    Rule SingleNewLineRule { get; }
 
-        Rule PossessiveAbbreviationRule { get; }
+    Rule PossessiveAbbreviationRule { get; }
 
-        Rule KommanditgesellschaftRule { get; }
+    Rule KommanditgesellschaftRule { get; }
 
-        Rule ReplaceColonBetweenNumbersRule { get; }
+    Rule ReplaceColonBetweenNumbersRule { get; }
 
-        Rule ReplaceNonSentenceBoundaryCommaRule { get; }
+    Rule ReplaceNonSentenceBoundaryCommaRule { get; }
 
-        Rule QuestionMarkInQuotationRule { get; }
+    Rule QuestionMarkInQuotationRule { get; }
 
-        Rule ExtraWhiteSpaceRule { get; }
+    Rule ExtraWhiteSpaceRule { get; }
 
-        Rule SubSingleQuoteRule { get; }
+    Rule SubSingleQuoteRule { get; }
 
-        ICleanerBehaviour CleanerBehaviour { get; }
-    }
+    ICleanerBehaviour CleanerBehaviour { get; }
 }

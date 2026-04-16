@@ -1,14 +1,12 @@
-﻿namespace PragmaticSegmenterNet.Languages
+using System.Text.RegularExpressions;
+
+namespace PragmaticSegmenterNet.Languages;
+
+internal sealed class GreekLanguage : LanguageBase
 {
-    using System.Collections.Generic;
-    using System.Text.RegularExpressions;
+    public override Regex SentenceBoundaryRegex { get; } = new Regex(@".*?[\.;!\?]|.*?$");
 
-    internal class GreekLanguage : LanguageBase
-    {
-        public override Regex SentenceBoundaryRegex { get; } = new Regex(@".*?[\.;!\?]|.*?$");
+    public override IReadOnlyList<string> Punctuations { get; } = [".", "!", ";", "?"];
 
-        public override IReadOnlyList<string> Punctuations { get; } = new[] {".", "!", ";", "?"};
-
-        public override IReadOnlyList<string> SentenceStarters { get; } = Empty;
-    }
+    public override IReadOnlyList<string> SentenceStarters { get; } = Empty;
 }

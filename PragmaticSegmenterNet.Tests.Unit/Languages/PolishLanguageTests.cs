@@ -1,14 +1,13 @@
-﻿namespace PragmaticSegmenterNet.Tests.Unit.Languages
-{
-    using Xunit;
+using Xunit;
 
-    public class PolishLanguageTests
+namespace PragmaticSegmenterNet.Tests.Unit.Languages;
+
+public class PolishLanguageTests
+{
+    [Fact]
+    public void CorrectlySegmentsText001()
     {
-        [Fact]
-        public void CorrectlySegmentsText001()
-        {
-            var result = Segmenter.Segment("To słowo bałt. jestskrótem.", Language.Polish);
-            Assert.Equal(new[] { "To słowo bałt. jestskrótem." }, result);
-        }
+        var result = Segmenter.Segment("To słowo bałt. jestskrótem.", Language.Polish);
+        Assert.Equal(new[] { "To słowo bałt. jestskrótem." }, result);
     }
 }

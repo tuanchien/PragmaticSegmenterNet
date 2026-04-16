@@ -1,14 +1,13 @@
-﻿namespace PragmaticSegmenterNet.Tests.Unit.Languages
-{
-    using Xunit;
+using Xunit;
 
-    public class AmharicLanguageTests
+namespace PragmaticSegmenterNet.Tests.Unit.Languages;
+
+public class AmharicLanguageTests
+{
+    [Fact]
+    public void SentenceEndingPunctuation001()
     {
-        [Fact]
-        public void SentenceEndingPunctuation001()
-        {
-            var result = Segmenter.Segment("እንደምን አለህ፧መልካም ቀን ይሁንልህ።እባክሽ ያልሽዉን ድገሚልኝ።", Language.Amharic);
-            Assert.Equal(new[] {"እንደምን አለህ፧", "መልካም ቀን ይሁንልህ።", "እባክሽ ያልሽዉን ድገሚልኝ።"}, result);
-        }
+        var result = Segmenter.Segment("እንደምን አለህ፧መልካም ቀን ይሁንልህ።እባክሽ ያልሽዉን ድገሚልኝ።", Language.Amharic);
+        Assert.Equal(new[] {"እንደምን አለህ፧", "መልካም ቀን ይሁንልህ።", "እባክሽ ያልሽዉን ድገሚልኝ።"}, result);
     }
 }

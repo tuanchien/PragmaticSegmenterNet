@@ -1,224 +1,326 @@
-﻿namespace PragmaticSegmenterNet
+using System.Text;
+using System.Text.RegularExpressions;
+
+namespace PragmaticSegmenterNet;
+
+internal static class InternalSegmenter
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text.RegularExpressions;
+    private static readonly Regex BetweenQuotesFirstRegex = new Regex(@"\s(?=\()");
+    private static readonly Regex BetweenQuotesSecondRegex = new Regex(@"(?<=\))\s");
+    private static readonly Regex ShortSegmentRegex = new Regex(@"\A[a-zA-Z]*\Z");
+    private static readonly Regex ConsecutiveUnderscoreRegex = new Regex(@"_{3,}");
 
-    internal static class InternalSegmenter
+    public static IReadOnlyList<string> Segment(string text, ILanguage language)
     {
-        private static readonly char[] NewLineSplit = { '\r' };
+        text = Preprocess(text, language);
 
-        private static readonly Regex BetweenQuotesFirstRegex = new Regex(@"\s(?=\()");
-        private static readonly Regex BetweenQuotesSecondRegex = new Regex(@"(?<=\))\s");
-        private static readonly Regex ShortSegmentRegex = new Regex(@"\A[a-zA-Z]*\Z");
-        private static readonly Regex ConsecutiveUnderscoreRegex = new Regex(@"_{3,}");
+        // Phase 4: Find all sentence boundaries at once (indices only)
+        var matches = language.SentenceBoundaryRegex.Matches(text);
 
-        public static IReadOnlyList<string> Segment(string text, ILanguage language)
+        // Phase 5: Materialize output strings from boundary indices
+        var results = new List<string>(matches.Count);
+        for (int i = 0; i < matches.Count; i++)
         {
-            var splitByReference = ReferenceSeparator.SeparateReferences(text);
-            var newLined = CheckForParenthesesBetweenQuotes(splitByReference, language);
-            var parts = newLined.Split(NewLineSplit)
-                .Where(x => !string.IsNullOrEmpty(x))
-                .ToList();
-
-            for (var i = 0; i < parts.Count; i++)
-            {
-                var part = parts[i];
-
-                part = language.SingleNewLineRule.Apply(part);
-
-                part = language.EllipsisRules.Apply(part);
-
-                parts[i] = part;
-            }
-
-            for (var i = 0; i < parts.Count; i++)
-            {
-                var split = CheckForPunctuation(parts[i], language);
-
-                if (split.Count == 0)
-                {
-                    continue;
-                }
-
-                if (split.Count == 1)
-                {
-                    parts[i] = language.SubSymbolsRules.Apply(split[0]);
-                }
-                else
-                {
-                    parts[i] = language.SubSymbolsRules.Apply(split[0]);
-                    for (var j = 1; j < split.Count; j++)
-                    {
-                        var part = language.SubSymbolsRules.Apply(split[j]);
-                        parts.Insert(i + j, part);
-                    }
-
-                    i += split.Count - 1;
-                }
-            }
-
-            for (var i = 0; i < parts.Count; i++)
-            {
-                if (parts[i].Length <= 2)
-                {
-                    continue;
-                }
-
-                var newParts = PostProcessSegment(parts[i], language);
-
-                if (newParts.Length == 0)
-                {
-                    parts.RemoveAt(i);
-                    i--;
-                }
-                else
-                {
-                    parts[i] = language.SubSingleQuoteRule.Apply(newParts[0]);
-
-                    if (newParts.Length > 1)
-                    {
-                        for (var j = 1; j < newParts.Length; j++)
-                        {
-                            var insert = language.SubSingleQuoteRule.Apply(newParts[j]);
-                            parts.Insert(i + j, insert);
-                        }
-
-                        i += newParts.Length - 1;
-                    }
-                }
-            }
-
-            for (var i = 0; i < parts.Count; i++)
-            {
-                if (string.IsNullOrWhiteSpace(parts[i]))
-                {
-                    parts.RemoveAt(i);
-                    i--;
-                }
-                else
-                {
-                    parts[i] = RevertRegexGroupReplacement(parts[i]);
-                }
-            }
-
-            return parts;
+            var match = matches[i];
+            var segment = text.Substring(match.Index, match.Length);
+            segment = language.SubSymbolsRules.Apply(segment);
+            CollectPostProcessed(segment, language, results);
         }
 
-        private static string RevertRegexGroupReplacement(string text)
+        return results;
+    }
+
+    // Non-iterator facade: preprocessing runs eagerly before any values are yielded.
+    public static IEnumerable<int> EnumerateEndIndexes(string text, string originalText, ILanguage language)
+    {
+        text = Preprocess(text, language);
+        var matches = language.SentenceBoundaryRegex.Matches(text);
+        return EnumerateEndIndexesCore(matches, text, originalText, language);
+    }
+
+    private static IEnumerable<int> EnumerateEndIndexesCore(MatchCollection matches, string processedText, string originalText, ILanguage language)
+    {
+        int searchFrom = 0;
+        for (int i = 0; i < matches.Count; i++)
         {
-            return text.Replace("&☃", "$");
+            var match = matches[i];
+            var segment = processedText.Substring(match.Index, match.Length);
+            segment = language.SubSymbolsRules.Apply(segment);
+            foreach (var endIndex in YieldEndIndexesFromSegment(segment, language, originalText, searchFrom))
+            {
+                searchFrom = endIndex + 1;
+                yield return endIndex;
+            }
+        }
+    }
+
+    private static string Preprocess(string text, ILanguage language)
+    {
+        // Phase 1: Full-text preprocessing
+        text = ReferenceSeparator.SeparateReferences(text);
+        text = CheckForParenthesesBetweenQuotes(text, language);
+        text = language.SingleNewLineRule.Apply(text);
+        text = language.EllipsisRules.Apply(text);
+        text = InsertEndMarkers(text, language);
+        text = ExclamationWords.Apply(text);
+
+        // Phase 2: BetweenPunctuationReplacer must run per-range because its
+        // quote/paren regexes (e.g. [^'] , [^"\\]) match across \r boundaries.
+        text = ApplyBetweenPunctuationPerRange(text, language);
+
+        // Phase 3: Remaining rules safe for full text (word/char-level patterns)
+        text = language.DoublePunctuationRules.Apply(text);
+        text = language.QuestionMarkInQuotationRule.Apply(text);
+        text = language.ExclamationMarkRules.Apply(text);
+        text = ListItemReplacer.ReplaceParentheses(text);
+        text = language.ReplaceColonBetweenNumbersRule.Apply(text);
+        text = language.ReplaceNonSentenceBoundaryCommaRule.Apply(text);
+
+        return text;
+    }
+
+    private static string ApplyBetweenPunctuationPerRange(string text, ILanguage language)
+    {
+        // Fast path: no \r boundaries means single range = full text
+        if (text.IndexOf('\r') < 0)
+        {
+            return language.BetweenPunctuationReplacer.Replace(text);
         }
 
-        private static string CheckForParenthesesBetweenQuotes(string text, ILanguage language)
+        var sb = new StringBuilder(text.Length);
+        int rangeStart = 0;
+
+        for (int i = 0; i <= text.Length; i++)
         {
-            if (!language.ParenthesesBetweenDoubleQuotesRegex.IsMatch(text))
+            if (i < text.Length && text[i] != '\r')
             {
-                return text;
+                continue;
             }
 
-            text = language.ParenthesesBetweenDoubleQuotesRegex.Replace(text, match =>
+            if (i > rangeStart)
             {
-                var withNewline = BetweenQuotesFirstRegex.Replace(match.Value, "\r");
-                var result = BetweenQuotesSecondRegex.Replace(withNewline, "\r");
+                var range = text.Substring(rangeStart, i - rangeStart);
+                range = language.BetweenPunctuationReplacer.Replace(range);
+                sb.Append(range);
+            }
 
-                return result;
-            });
+            if (i < text.Length)
+            {
+                sb.Append('\r');
+            }
 
+            rangeStart = i + 1;
+        }
+
+        return sb.ToString();
+    }
+
+    private static string InsertEndMarkers(string text, ILanguage language)
+    {
+        // First pass: check if any range needs a ȸ marker
+        bool needsMarker = false;
+        int rangeStart = 0;
+
+        for (int i = 0; i <= text.Length; i++)
+        {
+            if (i < text.Length && text[i] != '\r')
+            {
+                continue;
+            }
+
+            if (i > rangeStart && !RangeEndsWithPunctuation(text, rangeStart, i, language))
+            {
+                needsMarker = true;
+                break;
+            }
+
+            rangeStart = i + 1;
+        }
+
+        if (!needsMarker)
+        {
             return text;
         }
 
-        private static IReadOnlyList<string> CheckForPunctuation(string text, ILanguage language)
+        // Second pass: build text with ȸ markers inserted
+        var sb = new StringBuilder(text.Length + 16);
+        rangeStart = 0;
+
+        for (int i = 0; i <= text.Length; i++)
         {
-            var containsPunctuation = false;
-            var endsWithPunctuation = false;
-
-            for (var i = 0; i < language.Punctuations.Count; i++)
+            if (i < text.Length && text[i] != '\r')
             {
-                var index = text.IndexOf(language.Punctuations[i], StringComparison.OrdinalIgnoreCase);
-                if (index >= 0)
-                {
-                    containsPunctuation = true;
+                continue;
+            }
 
-                    if (!endsWithPunctuation)
-                    {
-                        endsWithPunctuation = index == text.Length - 1;
-                    }
+            if (i > rangeStart)
+            {
+                sb.Append(text, rangeStart, i - rangeStart);
+                if (!RangeEndsWithPunctuation(text, rangeStart, i, language))
+                {
+                    sb.Append('ȸ');
                 }
             }
 
-            if (!containsPunctuation)
+            if (i < text.Length)
             {
-                return new[] { text };
+                sb.Append('\r');
             }
 
-            if (!endsWithPunctuation)
+            rangeStart = i + 1;
+        }
+
+        return sb.ToString();
+    }
+
+    private static bool RangeEndsWithPunctuation(string text, int start, int end, ILanguage language)
+    {
+        if (end <= start)
+        {
+            return false;
+        }
+
+        var lastChar = text[end - 1];
+        var punctuations = language.Punctuations;
+
+        for (int i = 0; i < punctuations.Count; i++)
+        {
+            var p = punctuations[i];
+            if (p.Length == 1 && p[0] == lastChar)
             {
-                text += "ȸ";
+                return true;
             }
+        }
 
-            text = ExclamationWords.Apply(text);
-            text = language.BetweenPunctuationReplacer.Replace(text);
-            text = language.DoublePunctuationRules.Apply(text);
-            text = language.QuestionMarkInQuotationRule.Apply(text);
-            text = language.ExclamationMarkRules.Apply(text);
+        return false;
+    }
 
-            text = ListItemReplacer.ReplaceParentheses(text);
+    private static void CollectPostProcessed(string segment, ILanguage language, List<string> output)
+    {
+        if (segment.Length <= 2)
+        {
+            AddIfNotEmpty(segment, output);
+            return;
+        }
 
-            var result = SplitUsingSentenceBoundaryPunctuation(text, language);
+        var postParts = PostProcessSegment(segment, language);
+        if (postParts.Length == 0)
+        {
+            return;
+        }
+
+        for (int p = 0; p < postParts.Length; p++)
+        {
+            var final = language.SubSingleQuoteRule.Apply(postParts[p]);
+            AddIfNotEmpty(final, output);
+        }
+    }
+
+    private static void AddIfNotEmpty(string segment, List<string> output)
+    {
+        if (!string.IsNullOrWhiteSpace(segment))
+        {
+            output.Add(RevertRegexGroupReplacement(segment));
+        }
+    }
+
+    private static IEnumerable<int> YieldEndIndexesFromSegment(string segment, ILanguage language, string originalText, int searchFrom)
+    {
+        if (segment.Length <= 2)
+        {
+            int idx = FindEndIndex(segment, originalText, searchFrom);
+            if (idx >= 0) yield return idx;
+            yield break;
+        }
+
+        if (HasConsecutiveUnderscore(segment)) yield break;
+
+        segment = language.ReinsertEllipsisRules.Apply(segment);
+        segment = language.ExtraWhiteSpaceRule.Apply(segment);
+
+        if (language.QuotationAtEndOfSentenceRegex.IsMatch(segment))
+        {
+            var parts = language.SplitSpaceQuotationAtEndOfSentenceRegex.Split(segment);
+            for (int p = 0; p < parts.Length; p++)
+            {
+                var final = language.SubSingleQuoteRule.Apply(parts[p]);
+                int idx = FindEndIndex(final, originalText, searchFrom);
+                if (idx >= 0)
+                {
+                    searchFrom = idx + 1;
+                    yield return idx;
+                }
+            }
+            yield break;
+        }
+
+        segment = segment.Replace("\n", string.Empty).Trim();
+        segment = language.SubSingleQuoteRule.Apply(segment);
+        int endIdx = FindEndIndex(segment, originalText, searchFrom);
+        if (endIdx >= 0) yield return endIdx;
+    }
+
+    private static int FindEndIndex(string segment, string originalText, int searchFrom)
+    {
+        segment = RevertRegexGroupReplacement(segment);
+        if (string.IsNullOrWhiteSpace(segment)) return -1;
+        int pos = originalText.IndexOf(segment, searchFrom, StringComparison.Ordinal);
+        if (pos < 0) return -1;
+        return pos + segment.Length - 1;
+    }
+
+    private static string RevertRegexGroupReplacement(string text)
+    {
+        return text.Replace("&☃", "$");
+    }
+
+    private static string CheckForParenthesesBetweenQuotes(string text, ILanguage language)
+    {
+        if (!language.ParenthesesBetweenDoubleQuotesRegex.IsMatch(text))
+        {
+            return text;
+        }
+
+        text = language.ParenthesesBetweenDoubleQuotesRegex.Replace(text, match =>
+        {
+            var withNewline = BetweenQuotesFirstRegex.Replace(match.Value, "\r");
+            var result = BetweenQuotesSecondRegex.Replace(withNewline, "\r");
 
             return result;
-        }
+        });
 
-        private static IReadOnlyList<string> SplitUsingSentenceBoundaryPunctuation(string text, ILanguage language)
+        return text;
+    }
+
+    private static string[] PostProcessSegment(string segment, ILanguage language)
+    {
+        if (segment.Length < 2 && ShortSegmentRegex.IsMatch(segment))
         {
-            text = language.ReplaceColonBetweenNumbersRule.Apply(text);
-            text = language.ReplaceNonSentenceBoundaryCommaRule.Apply(text);
-
-            var matches = language.SentenceBoundaryRegex.Matches(text);
-
-            var result = new string[matches.Count];
-
-            for (var i = 0; i < matches.Count; i++)
-            {
-                result[i] = matches[i].Value;
-            }
-
-            return result;
+            return [segment];
         }
 
-        private static string[] PostProcessSegment(string segment, ILanguage language)
+        if (segment.Length < 2 || HasConsecutiveUnderscore(segment))
         {
-            if (segment.Length < 2 && ShortSegmentRegex.IsMatch(segment))
-            {
-                return new[] { segment };
-            }
-
-            if (segment.Length < 2 || HasConsecutiveUnderscore(segment))
-            {
-                // TODO: could be wrong...
-                return new string[0];
-            }
-
-            segment = language.ReinsertEllipsisRules.Apply(segment);
-            segment = language.ExtraWhiteSpaceRule.Apply(segment);
-
-            if (language.QuotationAtEndOfSentenceRegex.IsMatch(segment))
-            {
-                return language.SplitSpaceQuotationAtEndOfSentenceRegex.Split(segment);
-            }
-
-            segment = segment.Replace("\n", string.Empty).Trim();
-
-            return new[] { segment };
+            return [];
         }
 
-        private static bool HasConsecutiveUnderscore(string text)
+        segment = language.ReinsertEllipsisRules.Apply(segment);
+        segment = language.ExtraWhiteSpaceRule.Apply(segment);
+
+        if (language.QuotationAtEndOfSentenceRegex.IsMatch(segment))
         {
-            var replaced = ConsecutiveUnderscoreRegex.Replace(text, string.Empty);
-
-            return replaced.Length == 0;
+            return language.SplitSpaceQuotationAtEndOfSentenceRegex.Split(segment);
         }
+
+        segment = segment.Replace("\n", string.Empty).Trim();
+
+        return [segment];
+    }
+
+    private static bool HasConsecutiveUnderscore(string text)
+    {
+        var replaced = ConsecutiveUnderscoreRegex.Replace(text, string.Empty);
+
+        return replaced.Length == 0;
     }
 }

@@ -1,7 +1,6 @@
-﻿namespace PragmaticSegmenterNet
+namespace PragmaticSegmenterNet;
+
+internal interface IBetweenPunctuationReplacer
 {
-    internal interface IBetweenPunctuationReplacer
-    {
-        string Replace(string text);
-    }
+    string Replace(string text);
 }

@@ -1,39 +1,37 @@
-﻿namespace PragmaticSegmenterNet.Languages
+using System.Text.RegularExpressions;
+
+namespace PragmaticSegmenterNet.Languages;
+
+internal sealed class PersianLanguage : LanguageBase
 {
-    using System.Collections.Generic;
-    using System.Text.RegularExpressions;
+    public override Regex SentenceBoundaryRegex { get; } = new Regex(@".*?[:\.!\?\u061f]|.*?\z|.*?$");
 
-    internal class PersianLanguage : LanguageBase
+    public override IReadOnlyList<string> Punctuations { get; } = ["?", "!", ":", ".", "\u061f"];
+
+    public override Rule ReplaceColonBetweenNumbersRule { get; } = new Rule(@"(?<=\d):(?=\d)", "♭");
+
+    public override Rule ReplaceNonSentenceBoundaryCommaRule { get; } = new Rule(@"\u060c(?=\s\S+\u060c)", "♬");
+
+    public override IReadOnlyList<string> SentenceStarters { get; } = Empty;
+
+    public override IAbbreviationReplacer AbbreviationReplacer { get; }
+
+    public PersianLanguage()
     {
-        public override Regex SentenceBoundaryRegex { get; } = new Regex(@".*?[:\.!\?؟]|.*?\z|.*?$");
+        AbbreviationReplacer = new PersianAbbreviationReplacer(this);
+    }
 
-        public override IReadOnlyList<string> Punctuations { get; } = new[] {"?", "!", ":", ".", "؟"};
-
-        public override Rule ReplaceColonBetweenNumbersRule { get; } = new Rule(@"(?<=\d):(?=\d)", "♭");
-
-        public override Rule ReplaceNonSentenceBoundaryCommaRule { get; } = new Rule(@"،(?=\s\S+،)", "♬");
-
-        public override IReadOnlyList<string> SentenceStarters { get; } = Empty;
-
-        public override IAbbreviationReplacer AbbreviationReplacer { get; }
-
-        public PersianLanguage()
+    private sealed class PersianAbbreviationReplacer : AbbreviationReplacerBase
+    {
+        public PersianAbbreviationReplacer(ILanguage language) : base(language)
         {
-            AbbreviationReplacer = new PersianAbbreviationReplacer(this);
         }
 
-        private class PersianAbbreviationReplacer : AbbreviationReplacerBase 
+        protected override string ScanForReplacements(string text, int index, Match match, MatchCollection characterArray)
         {
-            public PersianAbbreviationReplacer(ILanguage language) : base(language)
-            {
-            }
+            var result = Regex.Replace(text, $"(?<={match.Value})\\.", "∯");
 
-            protected override string ScanForReplacements(string text, int index, Match match, MatchCollection characterArray)
-            {
-                var result = Regex.Replace(text, $"(?<={match.Value})\\.", "∯");
-
-                return result;
-            }
+            return result;
         }
     }
 }

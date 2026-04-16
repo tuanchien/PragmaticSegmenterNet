@@ -1,7 +1,6 @@
-﻿namespace PragmaticSegmenterNet
+namespace PragmaticSegmenterNet;
+
+internal interface IAbbreviationReplacer
 {
-    internal interface IAbbreviationReplacer
-    {
-        string Replace(string text);
-    }
+    string Replace(string text);
 }

@@ -1,8 +1,7 @@
-﻿namespace PragmaticSegmenterNet
+namespace PragmaticSegmenterNet;
+
+internal enum PunctuationReplacerType
 {
-    internal enum PunctuationReplacerType
-    {
-        Normal = 0,
-        Single = 1
-    }
+    Normal = 0,
+    Single = 1
 }

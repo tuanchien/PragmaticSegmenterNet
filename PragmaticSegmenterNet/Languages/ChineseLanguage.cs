@@ -1,9 +1,6 @@
-﻿namespace PragmaticSegmenterNet.Languages
-{
-    using System.Collections.Generic;
+namespace PragmaticSegmenterNet.Languages;
 
-    internal class ChineseLanguage : LanguageBase
-    {
-        public override IReadOnlyList<string> SentenceStarters { get; } = Empty;
-    }
+internal sealed class ChineseLanguage : LanguageBase
+{
+    public override IReadOnlyList<string> SentenceStarters { get; } = Empty;
 }

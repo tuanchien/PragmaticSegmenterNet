@@ -1,11 +1,15 @@
 # PragmaticSegmenterNet #
 
-[![Build status](https://ci.appveyor.com/api/projects/status/5jewe50doajnrckc?svg=true)](https://ci.appveyor.com/project/EliotJones/pragmaticsegmenternet)
+[![CI](https://github.com/UglyToad/PragmaticSegmenterNet/actions/workflows/ci.yml/badge.svg)](https://github.com/UglyToad/PragmaticSegmenterNet/actions/workflows/ci.yml)
 
 <img src="https://raw.githubusercontent.com/UglyToad/PragmaticSegmenterNet/master/logo.png" width="128" height="128" />
 
 This project is a direct port of [Pragmatic Segmenter](https://github.com/diasks2/pragmatic_segmenter) which provides rule-based sentence 
 boundary detection.
+
+## Prerequisites ##
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) or later
 
 ## Usage ##
 
@@ -29,6 +33,14 @@ The Segment method has a number of optional parameters:
 + Language - An enum representing the supported languages, the default is English, see the supported languages list below for the list of currently supported languages.
 + CleanText - A boolean indicating whether the input text should be cleaned prior to segmentation. Cleaning removes extra newlines and whitespace. Defaults to ```true```.
 + DocumentType - Used by the text cleaning process to determine which reformatting to apply. For PDFs this handles newlines in the middle of a sentence whereas for HTML documents this will handle HMTL tags. Defaults to any which does not apply any special formatting.
+
+## Building from source ##
+
+```bash
+dotnet restore
+dotnet build -c Release
+dotnet test -c Release
+```
 
 ## Languages ##
 

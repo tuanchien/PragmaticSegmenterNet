@@ -1,26 +1,23 @@
-﻿namespace PragmaticSegmenterNet.Languages
+namespace PragmaticSegmenterNet.Languages;
+
+internal sealed class EnglishLanguage : LanguageBase
 {
-    using System.Collections.Generic;
+    private static readonly ICleanerBehaviour CleanerBehaviourInstance = new EnglishCleanerBehaviour();
 
-    internal class EnglishLanguage : LanguageBase
+    public override IReadOnlyList<string> SentenceStarters { get; } =
+    [
+        "A", "Being", "Did", "For", "He", "How", "However", "I", "In", "It", "Millions", "More", "She", "That", "The", "There", "They", "We", "What", "When", "Where", "Who", "Why"
+    ];
+
+    public override IReadOnlyList<string> CleanedAbbreviations { get; } = [];
+
+    public override ICleanerBehaviour CleanerBehaviour { get; } = CleanerBehaviourInstance;
+
+    private sealed class EnglishCleanerBehaviour : CleanerBehaviourBase
     {
-        private static readonly ICleanerBehaviour CleanerBehaviourInstance = new EnglishCleanerBehaviour();
-
-        public override IReadOnlyList<string> SentenceStarters { get; } = new[]
+        public override string OnClean(string text)
         {
-            "A", "Being", "Did", "For", "He", "How", "However", "I", "In", "It", "Millions", "More", "She", "That", "The", "There", "They", "We", "What", "When", "Where", "Who", "Why"
-        };
-
-        public override IReadOnlyList<string> CleanedAbbreviations { get; } = new string[0];
-
-        public override ICleanerBehaviour CleanerBehaviour { get; } = CleanerBehaviourInstance;
-
-        private class EnglishCleanerBehaviour : CleanerBehaviourBase
-        {
-            public override string OnClean(string text)
-            {
-                return text.Replace('`', '\'');
-            }
+            return text.Replace('`', '\'');
         }
     }
 }
